@@ -1,8 +1,13 @@
+
 from pyspark.sql import SparkSession
 from configparser import ConfigParser
 from pyspark.sql.functions import to_date,date_format,to_timestamp
 #from pyspark.sql import Window
 from pyspark.sql import functions as F
+import os
+import glob
+import shutil
+from datetime import datetime
 
 config = ConfigParser()
 
@@ -108,21 +113,56 @@ fifty_percent_speed_df = grouped_df.withColumn("waktu", date_format("waktu", "HH
 #fifty_percent_speed_df = grouped_df.select("Nama Segment", "waktu", "Durasi diatas 50%")
 fifty_percent_speed_df.show()
 
-#output
-csv_file_name = '/mnt/c/linux/lalin_test/traffic_ex/fifty_percent_speed.csv'
-fifty_percent_speed_df.write.csv(csv_file_name, header=True, mode="overwrite")
+# Get the current date and time
+current_date = datetime.now().strftime('%Y-%m-%d')
+current_time = datetime.now().strftime('%H-%M-%S')
 
-# Convert DataFrame to JSON string
-json_string_50speed = fifty_percent_speed_df.toJSON().collect()
+# Specify the desired file name
+desired_file_name = f'50_percent_speed_{current_date}_{current_time}'
 
-# Define the path to the output JSON file
-output_file = '/mnt/c/linux/lalin_test/traffic_ex/fifty_percent_speed.json'
+# Specify the output directory path
+output_directory = '/mnt/c/linux/lalin_test/traffic_ex/output'
 
-# Write JSON string to the output file
-with open(output_file, 'w') as file:
-    for json_obj in json_string_50speed:
-        file.write(json_obj + '\n')
+# Generate the output file path
+output_file_path = f'{output_directory}/fifty_percent_speed.csv'
 
-# Print the JSON string
-for json in json_string_50speed:
-    print(json)
+# Export the DataFrame to CSV
+fifty_percent_speed_df.write.csv('/mnt/c/linux/lalin_test/traffic_ex/sparkdf_csv', header=True, mode='overwrite')
+#/mnt/c/Users/HP/AppData/Local/Temp/tmp/temp_csv
+
+# Search for the output file with the pattern "part-00000"
+output_files = glob.glob('/mnt/c/linux/lalin_test/traffic_ex/sparkdf_csv/part-00000*')
+
+if output_files:
+    # Get the first file in the list (assuming there is only one)
+    output_file = output_files[0]
+
+    # Extract the directory path and file extension
+    dir_path = os.path.dirname(output_file)
+    file_extension = os.path.splitext(output_file)[1]
+
+    # Construct the new file path with the desired file name
+    new_file_path = os.path.join(dir_path, desired_file_name + file_extension)
+
+    # Rename the output file to the desired file name
+    os.rename(output_file, new_file_path)
+
+    # Move the file to the desired location
+    shutil.move(new_file_path, output_file_path)
+else:
+    print("No output file found.")
+
+# # Convert DataFrame to JSON string
+# json_string_50speed = fifty_percent_speed_df.toJSON().collect()
+
+# # Define the path to the output JSON file
+# output_file = '/mnt/c/linux/lalin_test/traffic_ex/fifty_percent_speed.json'
+
+# # Write JSON string to the output file
+# with open(output_file, 'w') as file:
+#     for json_obj in json_string_50speed:
+#         file.write(json_obj + '\n')
+
+# # Print the JSON string
+# for json in json_string_50speed:
+#     print(json)
