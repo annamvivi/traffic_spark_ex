@@ -1,10 +1,1 @@
-apache-airflow==2.6.2
-numpy==1.24.2
-openpyxl==3.1.2
-pandas==1.5.3
-psycopg2_binary==2.9.5
-pyspark==3.3.2
-sql_queries==0.1.2
-SQLAlchemy==1.4.46
-sqlparse==0.4.3
-xlrd==2.0.1
+airflow-provider-great-expectations==0.0.6
